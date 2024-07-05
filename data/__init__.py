@@ -1,1 +1,1 @@
-from LibrispeechDataset import *
+from .LibrispeechDataset import *

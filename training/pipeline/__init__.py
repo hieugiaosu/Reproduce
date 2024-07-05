@@ -1,1 +1,1 @@
-from SepReformerBasePipeline import *
+from .SepReformerBasePipeline import *
