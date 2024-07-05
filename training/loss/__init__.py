@@ -5,7 +5,7 @@ BASE_LOSS_CONFIG = {
     "frame_length": 512,
     "frame_shift": 128,
     "window": "hann",
-    "num_stages": "var_model_num_stages",
+    "num_stages": 4,
     "num_spks": 2,
     "scale_inv": True,
     "mel_opt": False
