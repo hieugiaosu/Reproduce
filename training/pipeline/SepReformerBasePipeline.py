@@ -115,38 +115,39 @@ class SepReformerBasePipeLine(TrainPipeline):
         return tot_loss_time / num_batch, tot_loss_freq / num_batch, num_batch
     
     def validate(self):
-        self.model.eval()
-        tot_loss_time, num_batch = 0, 0
-        pbar = tqdm(total=len(self.dataloader), unit='batches', bar_format='{l_bar}{bar:25}{r_bar}{bar:-10b}', colour="YELLOW", dynamic_ncols=True)
-        tot_loss_freq = [0 for _ in range(self.model.num_stages)]
-        for data in self.val_dataloader:
-            mixture = data['mix']
-            src = data['src']
-            num_batch+=1
-            input_sizes = mixture.size(-1)
-            self.iteration+=1
-            pbar.update(1)
-            model_input = mixture.to(self.device)
-            if self.using_multi_gpu:
-                estim_src, estim_src_bn = torch.nn.parallel.data_parallel(self.model, model_input,device_ids=self.device_ids)
-            else:
-                estim_src, estim_src_bn = self.model(model_input)
-            cur_loss_s_bn = 0
-            cur_loss_s_bn = []
-            for idx, estim_src_value in enumerate(estim_src_bn):
-                cur_loss_s_bn.append(self.PIT_SISNR_mag_loss(estims=estim_src_value, idx=idx, input_sizes=input_sizes, target_attr=src))
-                tot_loss_freq[idx] += cur_loss_s_bn[idx].item() / (self.model.num_spks)
-            cur_loss_s = self.PIT_SISNR_time_loss(estims=estim_src, input_sizes=input_sizes, target_attr=src)
-            tot_loss_time += cur_loss_s.item() / self.model.num_spks
-            dict_loss = {"T_Loss":tot_loss_time / num_batch}
-            dict_loss.update({'F_Loss_' + str(idx): loss / num_batch for idx, loss in enumerate(tot_loss_freq)})
-            pbar.set_postfix(dict_loss)
-            del cur_loss_s_bn, cur_loss_s_bn, mixture, src, cur_loss_s, estim_src, estim_src_bn, dict_loss
-            torch.cuda.empty_cache()
-            gc.collect()
-        pbar.close()
-        tot_loss_freq = sum(tot_loss_freq) / len(tot_loss_freq)
-        return tot_loss_time / num_batch, tot_loss_freq / num_batch, num_batch
+        with torch.no_grad():
+            self.model.eval()
+            tot_loss_time, num_batch = 0, 0
+            pbar = tqdm(total=len(self.dataloader), unit='batches', bar_format='{l_bar}{bar:25}{r_bar}{bar:-10b}', colour="YELLOW", dynamic_ncols=True)
+            tot_loss_freq = [0 for _ in range(self.model.num_stages)]
+            for data in self.val_dataloader:
+                mixture = data['mix']
+                src = data['src']
+                num_batch+=1
+                input_sizes = mixture.size(-1)
+                self.iteration+=1
+                pbar.update(1)
+                model_input = mixture.to(self.device)
+                if self.using_multi_gpu:
+                    estim_src, estim_src_bn = torch.nn.parallel.data_parallel(self.model, model_input,device_ids=self.device_ids)
+                else:
+                    estim_src, estim_src_bn = self.model(model_input)
+                cur_loss_s_bn = 0
+                cur_loss_s_bn = []
+                for idx, estim_src_value in enumerate(estim_src_bn):
+                    cur_loss_s_bn.append(self.PIT_SISNR_mag_loss(estims=estim_src_value, idx=idx, input_sizes=input_sizes, target_attr=src))
+                    tot_loss_freq[idx] += cur_loss_s_bn[idx].item() / (self.model.num_spks)
+                cur_loss_s = self.PIT_SISNR_time_loss(estims=estim_src, input_sizes=input_sizes, target_attr=src)
+                tot_loss_time += cur_loss_s.item() / self.model.num_spks
+                dict_loss = {"T_Loss":tot_loss_time / num_batch}
+                dict_loss.update({'F_Loss_' + str(idx): loss / num_batch for idx, loss in enumerate(tot_loss_freq)})
+                pbar.set_postfix(dict_loss)
+                del cur_loss_s_bn, cur_loss_s_bn, mixture, src, cur_loss_s, estim_src, estim_src_bn, dict_loss
+                torch.cuda.empty_cache()
+                gc.collect()
+            pbar.close()
+            tot_loss_freq = sum(tot_loss_freq) / len(tot_loss_freq)
+            return tot_loss_time / num_batch, tot_loss_freq / num_batch, num_batch
 
     def train(self, epochs, time_limit, **kwargs):
         self.model.train()
@@ -154,6 +155,7 @@ class SepReformerBasePipeLine(TrainPipeline):
         best_loss = 1000.0
         start_time = time.time()
         count = 0
+        self.model.to(self.device)
         for epoch in range(1+epochs):
             valid_loss_best = init_loss_time
             train_start_time = time.time()
