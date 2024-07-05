@@ -41,10 +41,9 @@ class LibriSpeech2MixDataset(Dataset):
         if rate != self.sample_rate:
             second_waveform = torchaudio.functional.resample(second_waveform,rate,self.sample_rate)
         second_waveform = second_waveform.squeeze()[mix_from_idx:mix_to_idx]
-        mix_waveform = torchaudio.functional.add_noise(first_waveform,second_waveform,torch.tensor([1]))
+        mix_waveform = torchaudio.functional.add_noise(first_waveform,second_waveform,torch.tensor(1))
 
-        return mix_waveform, [first_waveform, second_waveform] if self.group_label else mix_waveform, first_waveform, second_waveform
-
+        return {"mix":mix_waveform, "src": [first_waveform, second_waveform]} if self.group_label else {"mix":mix_waveform, "first_waveform": first_waveform,"second_waveform": second_waveform}
 
 class LibriSpeech2MixWithSpeakerSampleDataset(Dataset):
     def __init__(self) -> None:

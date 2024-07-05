@@ -74,7 +74,9 @@ class SepReformerBasePipeLine(TrainPipeline):
         tot_loss_time, num_batch = 0, 0
         pbar = tqdm(total=len(self.dataloader), unit='batches', bar_format='{l_bar}{bar:25}{r_bar}{bar:-10b}', colour="YELLOW", dynamic_ncols=True)
         tot_loss_freq = [0 for _ in range(self.model.num_stages)]
-        for mixture,src in self.dataloader:
+        for data in self.dataloader:
+            mixture = data['mix']
+            src = data['src']
             num_batch+=1
             input_sizes = mixture.size(-1)
             self.iteration+=1
@@ -117,7 +119,9 @@ class SepReformerBasePipeLine(TrainPipeline):
         tot_loss_time, num_batch = 0, 0
         pbar = tqdm(total=len(self.dataloader), unit='batches', bar_format='{l_bar}{bar:25}{r_bar}{bar:-10b}', colour="YELLOW", dynamic_ncols=True)
         tot_loss_freq = [0 for _ in range(self.model.num_stages)]
-        for mixture,src in self.val_dataloader:
+        for data in self.val_dataloader:
+            mixture = data['mix']
+            src = data['src']
             num_batch+=1
             input_sizes = mixture.size(-1)
             self.iteration+=1
