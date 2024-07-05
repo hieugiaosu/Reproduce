@@ -20,6 +20,7 @@ class SepReformerBasePipeLine(TrainPipeline):
             main_scheduler_config = ReduceLROnPlateauBaseConfig,
             warm_up_scheduler = WarmupConstantSchedule,
             warm_up_scheduler_config = WarmupConstantScheduleConfig,
+            loss_config = BASE_LOSS_CONFIG,
             start_scheduling = 50,
             device="cpu",
             using_multi_gpu = False,
@@ -55,10 +56,10 @@ class SepReformerBasePipeLine(TrainPipeline):
             
         self.checkpoint_path = checkpoint_path if checkpoint_path[-1] != '/' else checkpoint_path[:-1]
 
-        self.PIT_SISNR_mag_loss = PIT_SISNR_mag(self.device,**BASE_LOSS_CONFIG['PIT_SISNR_mag'])
-        self.PIT_SISNR_time_loss = PIT_SISNR_time(self.device,**BASE_LOSS_CONFIG['PIT_SISNR_time'])
-        self.PIT_SISNRi_loss = PIT_SISNRi(self.device,**BASE_LOSS_CONFIG['PIT_SISNRi'])
-        self.PIT_SDRi_loss = PIT_SDRi(self.device,**BASE_LOSS_CONFIG['PIT_SDRi'])
+        self.PIT_SISNR_mag_loss = PIT_SISNR_mag(self.device,**loss_config['PIT_SISNR_mag'])
+        self.PIT_SISNR_time_loss = PIT_SISNR_time(self.device,**loss_config['PIT_SISNR_time'])
+        self.PIT_SISNRi_loss = PIT_SISNRi(self.device,**loss_config['PIT_SISNRi'])
+        self.PIT_SDRi_loss = PIT_SDRi(self.device,**loss_config['PIT_SDRi'])
 
         self.checkpoint_rate_unit = checkpoint_rate_unit
         assert self.checkpoint_rate_unit in ['epoch','iteration'],"only accept epoch or iteration checkpoint rate unit"
