@@ -142,7 +142,7 @@ class PIT_SISNR_mag(torch.nn.Module):
     def forward(self, **kwargs):
         estims = kwargs['estims']
         idx = kwargs['idx']
-        input_sizes = kwargs["input_sizes"].to(self.device)
+        input_sizes = kwargs["input_sizes"]
         targets = [t.to(self.device) for t in kwargs["target_attr"]]
         
         def _STFT_Mag_SDR_loss(permute, eps=1.0e-12):
@@ -166,7 +166,7 @@ class PIT_SISNR_mag(torch.nn.Module):
         
         pscore = torch.stack([_STFT_Mag_SDR_loss(p) for p in permutations(range(self.num_spks))])
         min_perutt, _ = torch.min(pscore, dim=0)
-        num_utts = input_sizes.shape[0]
+        num_utts = input_sizes
         return torch.sum(min_perutt) / num_utts
 
 @dataclass(slots=True)
