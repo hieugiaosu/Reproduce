@@ -143,7 +143,7 @@ class SepReformerBasePipeLine(TrainPipeline):
                 dict_loss = {"T_Loss":tot_loss_time / num_batch}
                 dict_loss.update({'F_Loss_' + str(idx): loss / num_batch for idx, loss in enumerate(tot_loss_freq)})
                 pbar.set_postfix(dict_loss)
-                del cur_loss_s_bn, cur_loss_s_bn, mixture, src, cur_loss_s, estim_src, estim_src_bn, dict_loss
+                del cur_loss_s_bn, mixture, src, cur_loss_s, estim_src, estim_src_bn, dict_loss
                 torch.cuda.empty_cache()
                 gc.collect()
             pbar.close()
