@@ -35,6 +35,8 @@ def getLibriSpeech2MixDataFrame(
                         audio_file = re.sub(r"\\","/",str(audio_file))
                         audio_info = torchaudio.info(audio_file)
                         audio_len = int(audio_info.num_frames)
+                        audio_rate = audio_info.sample_rate
+                        audio_len = int(audio_len*sample_rate/audio_rate)
                         count+=1
                         for i in range(0, audio_len - chunk_duration, chunk_duration):
                             data.append((speaker_idx, audio_file, i, i + chunk_duration))
