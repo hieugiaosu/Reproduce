@@ -186,7 +186,7 @@ class PIT_SISNR_time(torch.nn.Module):
     
     def forward(self, **kwargs):
         estims = kwargs['estims']
-        input_sizes = kwargs["input_sizes"].to(self.device)
+        input_sizes = kwargs["input_sizes"]
         targets = [target.to(self.device) for target in kwargs["target_attr"]]
         
         def _SDR_loss(permute, eps=1.0e-8):
@@ -209,7 +209,7 @@ class PIT_SISNR_time(torch.nn.Module):
         
         pscore = torch.stack([_SDR_loss(p) for p in permutations(range(self.num_spks))])
         min_perutt, _ = torch.min(pscore, dim=0)
-        num_utts = input_sizes.shape[0]
+        num_utts = input_sizes
         return torch.sum(min_perutt) / num_utts
 
 @dataclass(slots=True)
@@ -229,7 +229,7 @@ class PIT_SISNRi(torch.nn.Module):
     
     def forward(self, **kwargs):
         estims = kwargs['estims']
-        input_sizes = kwargs["input_sizes"].to(self.device)
+        input_sizes = kwargs["input_sizes"]
         targets = [t.to(self.device) for t in kwargs["target_attr"]]
         input = kwargs['mixture'].to(self.device)
         input_zm = input - torch.mean(input, dim=-1, keepdim=True)
@@ -254,7 +254,7 @@ class PIT_SISNRi(torch.nn.Module):
         
         pscore = torch.stack([_SDR_loss(p) for p in permutations(range(self.num_spks))], dim=0)
         min_perutt, min_idx = torch.max(pscore.sum(-1), dim=0)
-        num_utts = input_sizes.shape[0]
+        num_utts = input_sizes
         return torch.sum(min_perutt) / num_utts, pscore[min_idx]
 
 @dataclass(slots=True)
@@ -273,7 +273,7 @@ class PIT_SDRi(torch.nn.Module):
     
     def forward(self, **kwargs):
         estims = torch.stack(kwargs['estims'], dim=0).squeeze(1)
-        input_sizes = kwargs["input_sizes"].to(self.device)
+        input_sizes = kwargs["input_sizes"]
         targets = [t.to(self.device) for t in kwargs["target_attr"]]
         targets = torch.stack(targets, dim=0).squeeze(1)
         input = torch.cat([kwargs['mixture'], kwargs['mixture']], dim=0)
@@ -285,5 +285,5 @@ class PIT_SDRi(torch.nn.Module):
         min_perutt_out, _, _, _ = bss_eval_sources(targets, estims)
         min_perutt_in, _, _, _ = bss_eval_sources(targets, input)
         
-        num_utts = input_sizes.shape[0]
+        num_utts = input_sizes
         return np.sum(min_perutt_out - min_perutt_in) / num_utts, min_perutt_out - min_perutt_in
