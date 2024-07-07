@@ -99,6 +99,18 @@ class SepReformerBasePipeLine(TrainPipeline):
             alpha = 0.4 * 0.8**(1+(epoch-101)//5) if epoch > 100 else 0.4
             cur_loss = (1-alpha) * cur_loss_s + alpha * sum(cur_loss_s_bn) / len(cur_loss_s_bn)
             cur_loss = cur_loss / self.model.num_spks
+            bug = {
+                "model": self.model,
+                "PIT_SISNR_mag_loss":self.PIT_SISNR_mag_loss,
+                "tot_loss_freq": tot_loss_freq,
+                "cur_loss_s_bn": cur_loss_s_bn,
+                "PIT_SISNR_time_loss": self.PIT_SISNR_time_loss,
+                "mixture": mixture,
+                "src": src,
+                "output": (estim_src, estim_src_bn),
+                "cur_loss": cur_loss,
+            }
+            return bug
             cur_loss.backward()
             torch.nn.utils.clip_grad_norm_(self.model.parameters(),5.0)
             self.optimizer.step()
@@ -160,6 +172,7 @@ class SepReformerBasePipeLine(TrainPipeline):
         for epoch in range(1+epochs):
             valid_loss_best = init_loss_time
             train_start_time = time.time()
+            return self.epoch_iteration(epoch,start_time,time_limit)
             train_loss_src_time, train_loss_src_freq, train_num_batch = self.epoch_iteration(epoch,start_time,time_limit)
             train_end_time = time.time()
             valid_start_time = time.time()
