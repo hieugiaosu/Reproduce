@@ -95,29 +95,23 @@ class SepReformerBasePipeLine(TrainPipeline):
                 cur_loss_s_bn.append(self.PIT_SISNR_mag_loss(estims=estim_src_value, idx=idx, input_sizes=input_sizes, target_attr=src))
                 tot_loss_freq[idx] += cur_loss_s_bn[idx].item() / (self.model.num_spks)
             cur_loss_s = self.PIT_SISNR_time_loss(estims=estim_src, input_sizes=input_sizes, target_attr=src)
+            if cur_loss_s.is_nan():
+                print('---------------------nan------------------------')
+                tot_loss_time+= tot_loss_time/(num_batch-1)
+                del cur_loss_s_bn, mixture, src, cur_loss_s, estim_src, estim_src_bn
+                torch.cuda.empty_cache()
+                gc.collect()
+                continue
             tot_loss_time += cur_loss_s.item() / self.model.num_spks
             alpha = 0.4 * 0.8**(1+(epoch-101)//5) if epoch > 100 else 0.4
             cur_loss = (1-alpha) * cur_loss_s + alpha * sum(cur_loss_s_bn) / len(cur_loss_s_bn)
             cur_loss = cur_loss / self.model.num_spks
-            bug = {
-                "model": self.model,
-                "PIT_SISNR_mag_loss":self.PIT_SISNR_mag_loss,
-                "tot_loss_freq": tot_loss_freq,
-                "cur_loss_s_bn": cur_loss_s_bn,
-                "PIT_SISNR_time_loss": self.PIT_SISNR_time_loss,
-                "mixture": mixture,
-                "src": src,
-                "output": (estim_src, estim_src_bn),
-                "cur_loss": cur_loss,
-            }
-            
             cur_loss.backward()
             torch.nn.utils.clip_grad_norm_(self.model.parameters(),5.0)
             self.optimizer.step()
             dict_loss = {"T_Loss": tot_loss_time / num_batch}
             dict_loss.update({'F_Loss_' + str(idx): loss / num_batch for idx, loss in enumerate(tot_loss_freq)})
             pbar.set_postfix(dict_loss)
-            return bug
             del cur_loss_s_bn, mixture, src, cur_loss_s, alpha, cur_loss, estim_src, estim_src_bn, dict_loss
             torch.cuda.empty_cache()
             gc.collect()
@@ -173,7 +167,6 @@ class SepReformerBasePipeLine(TrainPipeline):
         for epoch in range(1+epochs):
             valid_loss_best = init_loss_time
             train_start_time = time.time()
-            return self.epoch_iteration(epoch,start_time,time_limit)
             train_loss_src_time, train_loss_src_freq, train_num_batch = self.epoch_iteration(epoch,start_time,time_limit)
             train_end_time = time.time()
             valid_start_time = time.time()
