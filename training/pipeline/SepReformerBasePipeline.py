@@ -126,7 +126,7 @@ class SepReformerBasePipeLine(TrainPipeline):
         with torch.no_grad():
             self.model.eval()
             tot_loss_time, num_batch = 0, 0
-            pbar = tqdm(total=len(self.dataloader), unit='batches', bar_format='{l_bar}{bar:25}{r_bar}{bar:-10b}', colour="YELLOW", dynamic_ncols=True)
+            pbar = tqdm(total=len(self.val_dataloader), unit='batches', bar_format='{l_bar}{bar:25}{r_bar}{bar:-10b}', colour="YELLOW", dynamic_ncols=True)
             tot_loss_freq = [0 for _ in range(self.model.num_stages)]
             for data in self.val_dataloader:
                 mixture = data['mix']
@@ -146,6 +146,13 @@ class SepReformerBasePipeLine(TrainPipeline):
                     cur_loss_s_bn.append(self.PIT_SISNR_mag_loss(estims=estim_src_value, idx=idx, input_sizes=input_sizes, target_attr=src))
                     tot_loss_freq[idx] += cur_loss_s_bn[idx].item() / (self.model.num_spks)
                 cur_loss_s = self.PIT_SISNR_time_loss(estims=estim_src, input_sizes=input_sizes, target_attr=src)
+                if cur_loss_s.isnan():
+                    print('---------------------nan------------------------')
+                    tot_loss_time+= tot_loss_time/(num_batch-1)
+                    del cur_loss_s_bn, mixture, src, cur_loss_s, estim_src, estim_src_bn
+                    torch.cuda.empty_cache()
+                    gc.collect()
+                    continue
                 tot_loss_time += cur_loss_s.item() / self.model.num_spks
                 dict_loss = {"T_Loss":tot_loss_time / num_batch}
                 dict_loss.update({'F_Loss_' + str(idx): loss / num_batch for idx, loss in enumerate(tot_loss_freq)})
