@@ -110,13 +110,14 @@ class SepReformerBasePipeLine(TrainPipeline):
                 "output": (estim_src, estim_src_bn),
                 "cur_loss": cur_loss,
             }
-            return bug
+            
             cur_loss.backward()
             torch.nn.utils.clip_grad_norm_(self.model.parameters(),5.0)
             self.optimizer.step()
             dict_loss = {"T_Loss": tot_loss_time / num_batch}
             dict_loss.update({'F_Loss_' + str(idx): loss / num_batch for idx, loss in enumerate(tot_loss_freq)})
             pbar.set_postfix(dict_loss)
+            return bug
             del cur_loss_s_bn, mixture, src, cur_loss_s, alpha, cur_loss, estim_src, estim_src_bn, dict_loss
             torch.cuda.empty_cache()
             gc.collect()
