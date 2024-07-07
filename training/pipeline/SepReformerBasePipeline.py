@@ -95,7 +95,7 @@ class SepReformerBasePipeLine(TrainPipeline):
                 cur_loss_s_bn.append(self.PIT_SISNR_mag_loss(estims=estim_src_value, idx=idx, input_sizes=input_sizes, target_attr=src))
                 tot_loss_freq[idx] += cur_loss_s_bn[idx].item() / (self.model.num_spks)
             cur_loss_s = self.PIT_SISNR_time_loss(estims=estim_src, input_sizes=input_sizes, target_attr=src)
-            if cur_loss_s.is_nan():
+            if cur_loss_s.isnan():
                 print('---------------------nan------------------------')
                 tot_loss_time+= tot_loss_time/(num_batch-1)
                 del cur_loss_s_bn, mixture, src, cur_loss_s, estim_src, estim_src_bn
