@@ -98,9 +98,7 @@ class SepReformerBasePipeLine(TrainPipeline):
             if cur_loss_s.isnan():
                 print('---------------------nan------------------------')
                 tot_loss_time+= tot_loss_time/(num_batch-1)
-                del cur_loss_s_bn, mixture, src, cur_loss_s, estim_src, estim_src_bn
-                torch.cuda.empty_cache()
-                gc.collect()
+                
                 bug = {
                     "model": self.model,
                     "PIT_SISNR_mag_loss":self.PIT_SISNR_mag_loss,
@@ -111,6 +109,9 @@ class SepReformerBasePipeLine(TrainPipeline):
                     "src": src,
                     "output": (estim_src, estim_src_bn)
                 }
+                del cur_loss_s_bn, mixture, src, cur_loss_s, estim_src, estim_src_bn
+                torch.cuda.empty_cache()
+                gc.collect()
                 return bug
             tot_loss_time += cur_loss_s.item() / self.model.num_spks
             alpha = 0.4 * 0.8**(1+(epoch-101)//5) if epoch > 100 else 0.4
@@ -184,6 +185,7 @@ class SepReformerBasePipeLine(TrainPipeline):
         for epoch in range(1+epochs):
             valid_loss_best = init_loss_time
             train_start_time = time.time()
+            bug = ""
             try:
                 bug = self.epoch_iteration(epoch,start_time,time_limit)
                 train_loss_src_time, train_loss_src_freq, train_num_batch = bug
