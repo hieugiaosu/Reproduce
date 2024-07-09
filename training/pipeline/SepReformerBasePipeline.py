@@ -215,7 +215,7 @@ class SepReformerBasePipeLine(TrainPipeline):
                 print('early stoping because loss is not decay')
                 break
 
-            if time.time() > time_limit:
+            if time.time() - start_time > time_limit:
                 print("-------------out of time------------------")
                 break 
         return self.model
