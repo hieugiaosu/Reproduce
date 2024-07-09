@@ -81,7 +81,7 @@ class SepReformerBasePipeLine(TrainPipeline):
             input_sizes = mixture.size(-1)
             self.iteration+=1
             pbar.update(1)
-            if epoch == 1: self.warmup_scheduler.step()
+            if epoch == 1: self.warm_up_scheduler.step()
             model_input = mixture.to(self.device)
             self.optimizer.zero_grad()
             if self.using_multi_gpu:
