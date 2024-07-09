@@ -7,9 +7,6 @@ from ..loss import *
 import time
 from tqdm import tqdm
 import gc
-import logging
-logging.basicConfig(filename='error.log', level=logging.ERROR, 
-                    format='%(asctime)s:%(levelname)s:%(message)s')
 class SepReformerBasePipeLine(TrainPipeline):
     def __init__(
             self, 
@@ -193,7 +190,8 @@ class SepReformerBasePipeLine(TrainPipeline):
                 bug = self.epoch_iteration(epoch,start_time,time_limit)
                 train_loss_src_time, train_loss_src_freq, train_num_batch = bug
             except Exception as e:
-                logging.error("An error occurred", exc_info=True)
+                with open('error.log',mode='w') as f:
+                    f.write(str(e))
                 print(bug)
                 return bug
             train_end_time = time.time()
