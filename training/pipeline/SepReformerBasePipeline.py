@@ -120,6 +120,7 @@ class SepReformerBasePipeLine(TrainPipeline):
             cur_loss.backward()
             torch.nn.utils.clip_grad_norm_(self.model.parameters(),5.0)
             self.optimizer.step()
+            print()
             dict_loss = {"T_Loss": tot_loss_time / num_batch}
             dict_loss.update({'F_Loss_' + str(idx): loss / num_batch for idx, loss in enumerate(tot_loss_freq)})
             pbar.set_postfix(dict_loss)
