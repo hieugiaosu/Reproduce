@@ -191,6 +191,7 @@ class SepReformerBasePipeLine(TrainPipeline):
                 bug = self.epoch_iteration(epoch,start_time,time_limit)
                 train_loss_src_time, train_loss_src_freq, train_num_batch = bug
             except:
+                print(bug)
                 return bug
             train_end_time = time.time()
             valid_start_time = time.time()
